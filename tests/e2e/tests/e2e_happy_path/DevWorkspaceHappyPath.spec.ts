@@ -40,7 +40,9 @@ const topMenu: TopMenu = e2eContainer.get(CLASSES.TopMenu);
 const globalTaskScope = 'Global';
 const terminal: Terminal = e2eContainer.get(CLASSES.Terminal);
 const warningDialog: DialogWindow = e2eContainer.get(CLASSES.DialogWindow);
-
+const pathToChangedJavaFileFolder: string = `${projectName}/${workspaceRootFolderName}/main/java/org/springframework/samples/petclinic/system`;
+const changedJavaFileName: string = 'CrashController.java';
+const textForErrorMessageChange: string = 'HHHHHHHHHHHHH';
 
 const SpringAppLocators = {
     springTitleLocator: By.xpath('//div[@class=\'container-fluid\']//h2[text()=\'Welcome\']'),
@@ -74,7 +76,7 @@ suite('Workspace creation via factory url', async () => {
     });
     });
 
-    suite('Language server validation', async () => {
+    suite.skip('Language server validation', async () => {
         test('Java LS initialization', async () => {
             await projectTree.expandPathAndOpenFile(pathToJavaFolder, javaFileName);
             await ide.waitNotificationAndClickOnButton('The workspace contains Java projects. Would you like to import them?', 'Yes');
@@ -133,18 +135,18 @@ suite('Workspace creation via factory url', async () => {
             await editor.waitEditorAvailable(codeNavigationClassName, TimeoutConstants.TS_EDITOR_TAB_INTERACTION_TIMEOUT * 4);
         });
 });
-    suite('Validation of workspace build and run', async () => {
+    suite.skip('Validation of workspace build and run', async () => {
         test('Build application', async () => {
-           const taskName: string = 'build';
-           await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
-           await terminal.waitIconSuccess(taskName, 500_000);
+            const taskName: string = 'build';
+            await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
+            await terminal.waitIconSuccess(taskName, 500_000);
         });
 
         test('Run application', async () => {
-           const taskName: string = 'run';
-           await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
-           await ide.waitNotification('Process 8080-tcp is now listening on port 8080. Open it ?', 120_000);
-           await ide.clickOnNotificationButton('Process 8080-tcp is now listening on port 8080. Open it ?', 'Open In New Tab');
+            const taskName: string = 'run';
+            await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
+            await ide.waitNotification('Process 8080-tcp is now listening on port 8080. Open it ?', 120_000);
+            await ide.clickOnNotificationButton('Process 8080-tcp is now listening on port 8080. Open it ?', 'Open In New Tab');
        });
 
         test('Check the running application', async () => {
@@ -158,6 +160,37 @@ suite('Workspace creation via factory url', async () => {
             await terminal.closeTerminalTab('build');
        });
 });
+
+    suite('Display source code changes in the running application', async () => {
+        test('Change source code', async () => {
+            await projectTree.expandPathAndOpenFile(pathToChangedJavaFileFolder, changedJavaFileName);
+            await editor.waitEditorAvailable(changedJavaFileName);
+            await editor.clickOnTab(changedJavaFileName);
+            await editor.waitTabFocused(changedJavaFileName);
+
+            await editor.moveCursorToLineAndChar(changedJavaFileName, 34, 89);
+            await editor.performKeyCombination(changedJavaFileName, textForErrorMessageChange);
+            await editor.performKeyCombination(changedJavaFileName, Key.chord(Key.CONTROL, 's'));
+        });
+
+        test('Build application with changes', async () => {
+            await buildApplication(250_000);
+        });
+
+        test('Run application with changes', async () => {
+            await runApplication();
+        });
+
+        test('Check changes are displayed', async () => {
+            await switchAppWindowAndCheck(SpringAppLocators.springTitleLocator);
+        });
+
+        test('Close running terminal processes and tabs', async () => {
+            await terminal.rejectTerminalProcess('run');
+            await terminal.closeTerminalTab('run');
+            await warningDialog.waitAndCloseIfAppear();
+        });
+    });
 
 async function checkJavaPathCompletion() {
     if (await ide.isNotificationPresent('Classpath is incomplete. Only syntax errors will be reported')) {
@@ -180,6 +213,19 @@ async function checkJavaPathCompletion() {
     }
 }
 
+async function runApplication() {
+    const taskName: string = 'run';
+    await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
+    await ide.waitNotification('Process 8080-tcp is now listening on port 8080. Open it ?', 120_000);
+    await ide.clickOnNotificationButton('Process 8080-tcp is now listening on port 8080. Open it ?', 'Open In New Tab');
+}
+
+async function buildApplication(successIconTimeout: number) {
+    const taskName: string = 'build';
+    await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
+    await terminal.waitIconSuccess(taskName, successIconTimeout);
+}
+
 // when we use devfile v.2 the test app. is opened in the separate window instead of widget
 async function switchAppWindowAndCheck(contentLocator: By) {
     const mainWindowHandle: string = await browserTabsUtil.getCurrentWindowHandle();
@@ -192,3 +238,5 @@ async function switchAppWindowAndCheck(contentLocator: By) {
             await ide.waitAndSwitchToIdeFrame();
         }
 }
+
+
