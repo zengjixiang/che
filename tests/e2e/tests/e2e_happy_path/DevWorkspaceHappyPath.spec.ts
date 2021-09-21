@@ -58,7 +58,7 @@ suite('Workspace creation via factory url', async () => {
     const workspaceRootFolderName: string = 'src';
 
     suite('Open factory URL', async () => {
-
+        // this is DevWorkspace test specific - we create the test ws. using factory instead of chectl
         test(`Navigating to factory URL`, async () => {
             await browserTabsUtil.navigateTo(factoryUrl);
         });
@@ -70,13 +70,15 @@ suite('Workspace creation via factory url', async () => {
         test('Register running workspace', async () => {
             await ide.waitAndSwitchToIdeFrame();
             await ide.waitIde(TimeoutConstants.TS_SELENIUM_START_WORKSPACE_TIMEOUT);
+            // in this place we do not check 'Do you trust the authors of', 'Yes, I trust' message
+            // it  is  DevWorkspace test specific. After consuming the factory the notification does not appear
             await projectTree.openProjectTreeContainer();
             await projectTree.waitProjectImported(projectName, workspaceRootFolderName);
         });
     });
     });
 
-    suite.skip('Language server validation', async () => {
+    suite('Language server validation', async () => {
         test('Java LS initialization', async () => {
             await projectTree.expandPathAndOpenFile(pathToJavaFolder, javaFileName);
             await ide.waitNotificationAndClickOnButton('The workspace contains Java projects. Would you like to import them?', 'Yes');
@@ -135,20 +137,22 @@ suite('Workspace creation via factory url', async () => {
             await editor.waitEditorAvailable(codeNavigationClassName, TimeoutConstants.TS_EDITOR_TAB_INTERACTION_TIMEOUT * 4);
         });
 });
-    suite.skip('Validation of workspace build and run', async () => {
+    suite('Validation of workspace build and run', async () => {
         test('Build application', async () => {
-            const taskName: string = 'build';
-            await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
-            await terminal.waitIconSuccess(taskName, 500_000);
+           const taskName: string = 'build';
+           await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
+           await terminal.waitIconSuccess(taskName, 500_000);
         });
 
         test('Run application', async () => {
-            const taskName: string = 'run';
-            await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
-            await ide.waitNotification('Process 8080-tcp is now listening on port 8080. Open it ?', 120_000);
-            await ide.clickOnNotificationButton('Process 8080-tcp is now listening on port 8080. Open it ?', 'Open In New Tab');
+           const taskName: string = 'run';
+           await topMenu.runTask(`${taskName}, ${globalTaskScope}`);
+           await ide.waitNotification('Process 8080-tcp is now listening on port 8080. Open it ?', 120_000);
+            // devWs specific. After running test application we can open it just in the new window.
+            // the preview widget is not available yet.
+           await ide.clickOnNotificationButton('Process 8080-tcp is now listening on port 8080. Open it ?', 'Open In New Tab');
        });
-
+        // this is DevWorkspace test specific since Theia does not provide yet preview as a widget
         test('Check the running application', async () => {
             await switchAppWindowAndCheck(SpringAppLocators.springTitleLocator);
        });
@@ -238,5 +242,3 @@ async function switchAppWindowAndCheck(contentLocator: By) {
             await ide.waitAndSwitchToIdeFrame();
         }
 }
-
-
