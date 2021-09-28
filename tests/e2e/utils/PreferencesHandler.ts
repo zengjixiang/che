@@ -12,6 +12,10 @@ import { injectable, inject } from 'inversify';
 import { Logger } from './Logger';
 import { CLASSES } from '../inversify.types';
 import { CheApiRequestHandler } from './requestHandlers/CheApiRequestHandler';
+import { Editor } from '../pageobjects/ide/Editor';
+import { QuickOpenContainer } from '../pageobjects/ide/QuickOpenContainer';
+import { TopMenu } from '../pageobjects/ide/TopMenu';
+import { Key } from 'selenium-webdriver';
 
 export enum TerminalRendererType {
     canvas = 'canvas',
@@ -27,7 +31,28 @@ export enum AskForConfirmationType {
 @injectable()
 export class PreferencesHandler {
 
-    constructor(@inject(CLASSES.CheApiRequestHandler) private readonly requestHandler: CheApiRequestHandler) {
+    constructor(@inject(CLASSES.CheApiRequestHandler) private readonly requestHandler: CheApiRequestHandler,
+        @inject(CLASSES.Editor) private readonly editor: Editor,
+        @inject(CLASSES.QuickOpenContainer) private readonly quickOpenContainer: QuickOpenContainer,
+        @inject(CLASSES.TopMenu) private readonly topMenu: TopMenu) {
+    }
+
+    /**
+     * Works properly only for the running workspace.
+     */
+    public async setPreferenceUsingUI(property: string, value: any) {
+        const tabTitle: string = 'settings.json';
+
+        await this.topMenu.selectOption('View', 'Find Command...');
+        await this.quickOpenContainer.typeAndSelectSuggestion('Preferences:', 'Preferences: Open Preferences (JSON)');
+
+        let editorText: string = await this.editor.getEditorVisibleText(tabTitle);
+        let preferences = JSON.parse(editorText);
+        preferences[property] = value;
+
+        await this.editor.deleteAllText(tabTitle);
+        await this.editor.type(tabTitle, JSON.stringify(preferences), 1);
+        await this.editor.type(tabTitle, Key.chord(Key.CONTROL, Key.SHIFT, 'i'), 1);
     }
 
     /**
@@ -69,8 +94,8 @@ export class PreferencesHandler {
         try {
             response = await this.requestHandler.get('api/preferences');
         } catch (e) {
-            Logger.error(`PreferencesHandler.setPreferences failed to get user preferences`);
-            throw e;
+            Logger.error(`PreferencesHandler.setPreferences failed to get user preferences: ${e}`);
+            return;
         }
         let userPref = response.data;
         try {
@@ -86,8 +111,8 @@ export class PreferencesHandler {
             try {
                 await this.requestHandler.post('api/preferences', userPref);
             } catch (e) {
-                Logger.error(`PreferencesHandler.setPreference failed to manually set preferences value.`);
-                throw e;
+                Logger.error(`PreferencesHandler.setPreference failed to manually set preferences value: ${e}`);
+                return;
             }
         }
         Logger.trace(`PreferencesHandler.setPreferences ${attribute} to ${value} done.`);

@@ -36,15 +36,12 @@ const factoryUrl: string = `${TestConstants.TS_SELENIUM_BASE_URL}/f?url=${devfil
 const projectName: string = 'nodejs-web-app';
 const pathToFile: string = `${projectName}`;
 const yamlFileName: string = 'routes.yaml';
-const yamlSchema = { 'yaml-schema/yaml-schema.json': '*.yaml' };
+const yamlSchema = { 'yaml-schema.json': '*.yaml' };
+
 let workspaceName: string = '';
 
 suite('The "VscodeYamlPlugin" userstory', async () => {
     suite('Create workspace', async () => {
-        test('Set yaml schema', async () => {
-            await preferencesHandler.setPreference('yaml.schemas', yamlSchema);
-        });
-
         test('Create workspace using factory', async () => {
             await browserTabsUtil.navigateTo(factoryUrl);
         });
@@ -67,6 +64,10 @@ suite('The "VscodeYamlPlugin" userstory', async () => {
     });
 
     suite('Check the "vscode-yaml" plugin', async () => {
+        test('Set the yaml schema path', async () => {
+            await preferencesHandler.setPreferenceUsingUI('yaml.schemas', yamlSchema);
+        });
+
         test('Check autocomplete', async () => {
             await projectTree.expandPathAndOpenFile(pathToFile, yamlFileName);
             await editor.waitSuggestion(yamlFileName, 'from', 60000, 18, 5);

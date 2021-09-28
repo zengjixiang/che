@@ -40,9 +40,7 @@ const topMenu: TopMenu = e2eContainer.get(CLASSES.TopMenu);
 const globalTaskScope = 'Global';
 const terminal: Terminal = e2eContainer.get(CLASSES.Terminal);
 const warningDialog: DialogWindow = e2eContainer.get(CLASSES.DialogWindow);
-const pathToChangedJavaFileFolder: string = `${projectName}/${workspaceRootFolderName}/main/java/org/springframework/samples/petclinic/system`;
-const changedJavaFileName: string = 'CrashController.java';
-const textForErrorMessageChange: string = 'HHHHHHHHHHHHH';
+
 
 const SpringAppLocators = {
     springTitleLocator: By.xpath('//div[@class=\'container-fluid\']//h2[text()=\'Welcome\']'),
