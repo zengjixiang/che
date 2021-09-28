@@ -186,7 +186,7 @@ suite('Workspace creation via factory url', async () => {
         });
 
         test('Check changes are displayed', async () => {
-            await switchAppWindowAndCheck(SpringAppLocators.springTitleLocator);
+            await checkErrorMessageInApplicationController(SpringAppLocators.springErrorButtonLocator);
         });
 
         test('Close running terminal processes and tabs', async () => {
@@ -235,10 +235,33 @@ async function switchAppWindowAndCheck(contentLocator: By) {
     const mainWindowHandle: string = await browserTabsUtil.getCurrentWindowHandle();
     await browserTabsUtil.waitAndSwitchToAnotherWindow(mainWindowHandle, TimeoutConstants.TS_EDITOR_TAB_INTERACTION_TIMEOUT);
     const isApplicationTitleVisible: boolean = await driverHelper.isVisible(contentLocator);
-        if (!isApplicationTitleVisible) {
-            await driverHelper.getDriver().sleep(TimeoutConstants.TS_SELENIUM_DIALOG_WIDGET_TIMEOUT);
-            await driverHelper.getDriver().navigate().refresh();
-            await browserTabsUtil.switchToWindow(mainWindowHandle);
-            await ide.waitAndSwitchToIdeFrame();
-        }
+    await waitTestAppAvailability(isApplicationTitleVisible);
+    await driverHelper.waitVisibility(contentLocator);
+    await driverHelper.getDriver().close();
+    await switchToIDE(mainWindowHandle);
+}
+
+
+async function checkErrorMessageInApplicationController(contentLocator: By) {
+    const mainWindowHandle: string = await browserTabsUtil.getCurrentWindowHandle();
+    await browserTabsUtil.waitAndSwitchToAnotherWindow(mainWindowHandle, TimeoutConstants.TS_EDITOR_TAB_INTERACTION_TIMEOUT);
+    const isApplicationTitleVisible: boolean = await driverHelper.isVisible(contentLocator);
+    await waitTestAppAvailability(isApplicationTitleVisible);
+    await driverHelper.waitAndClick(SpringAppLocators.springErrorButtonLocator);
+    await driverHelper.waitVisibility(SpringAppLocators.springErrorMessageLocator, 15_000);
+    await driverHelper.getDriver().close();
+    await switchToIDE(mainWindowHandle);
+}
+
+
+async function waitTestAppAvailability(isWebElementPreset: boolean) {
+    if (!isWebElementPreset) {
+        await driverHelper.getDriver().sleep(TimeoutConstants.TS_SELENIUM_DIALOG_WIDGET_TIMEOUT);
+        await driverHelper.getDriver().navigate().refresh();
+    }
+}
+
+async function switchToIDE(mainWindowHandler: string) {
+    await browserTabsUtil.switchToWindow(mainWindowHandler);
+    await ide.waitAndSwitchToIdeFrame();
 }
