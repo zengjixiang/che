@@ -53,10 +53,10 @@ spec:
       resources:
         requests:
           memory: "3Gi"
-          cpu: "2"
+          cpu: "1"
         limits:
           memory: "4Gi"
-          cpu: "2"
+          cpu: "1"
     # Download results    
     - name: download-reports
       image: eeacms/rsync
