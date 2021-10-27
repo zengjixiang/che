@@ -79,7 +79,8 @@ jobs:
         run: |
           git config --global user.name "Mykhailo Kuznietsov"
           git config --global user.email "mkuznets@redhat.com"
-
+          git config --global pull.ff only
+          
           export GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
           bash -x ./make-release.sh --version ${{ github.event.inputs.version}}
 
