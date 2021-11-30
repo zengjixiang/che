@@ -49,10 +49,10 @@ suite(`The 'PhpPlugin' tests`, async () => {
         });
 
         test('Wait until created workspace is started', async () => {
+            await ide.waitAndSwitchToIdeFrame();
             workspaceName = await workspaceNameHandler.getNameFromUrl();
             CheReporter.registerRunningWorkspace(workspaceName);
 
-            await ide.waitAndSwitchToIdeFrame();
             await ide.waitIde(TimeoutConstants.TS_SELENIUM_START_WORKSPACE_TIMEOUT);
             await ide.waitNotificationAndClickOnButton('Do you trust the authors of', 'Yes, I trust', 60_000);
 
@@ -77,9 +77,9 @@ suite(`The 'PhpPlugin' tests`, async () => {
         test('Error highlighting', async () => {
             const textForErrorDisplaying: string = '*';
             await editor.type(tabTitle, textForErrorDisplaying, 13);
-            await editor.waitErrorInLine(13, TimeoutConstants.TS_ERROR_HIGHLIGHTING_TIMEOUT);
+            await editor.waitErrorInLine(13, tabTitle, TimeoutConstants.TS_ERROR_HIGHLIGHTING_TIMEOUT);
             await editor.type(tabTitle, Key.chord(Key.DELETE), 13);
-            await editor.waitErrorInLineDisappearance(13);
+            await editor.waitErrorInLineDisappearance(13, tabTitle);
         });
     });
 

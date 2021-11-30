@@ -45,10 +45,10 @@ suite('The "VscodeValePlugin" userstory', async () => {
         });
 
         test('Wait until created workspace is started', async () => {
+            await ide.waitAndSwitchToIdeFrame();
             workspaceName = await workspaceNameHandler.getNameFromUrl();
             CheReporter.registerRunningWorkspace(workspaceName);
 
-            await ide.waitAndSwitchToIdeFrame();
             await ide.waitIde(TimeoutConstants.TS_SELENIUM_START_WORKSPACE_TIMEOUT);
             await ide.waitNotificationAndClickOnButton('Do you trust the authors of', 'Yes, I trust', 60_000);
         });
@@ -64,7 +64,7 @@ suite('The "VscodeValePlugin" userstory', async () => {
     suite('Check the "vale" plugin', async () => {
         test('Check warning in the editor appearance', async () => {
             await projectTree.expandPathAndOpenFile(pathToFile, docFileName);
-            await editor.waitInfoInLine(16);
+            await editor.waitInfoInLine(16,docFileName);
         });
 
         test('Open the "Problems" terminal tab', async () => {

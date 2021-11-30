@@ -45,10 +45,10 @@ suite(`The 'PythonPlugin' test`, async () => {
         });
 
         test('Wait until created workspace is started', async () => {
+            await ide.waitAndSwitchToIdeFrame();
             workspaceName = await workspaceNameHandler.getNameFromUrl();
             CheReporter.registerRunningWorkspace(workspaceName);
 
-            await ide.waitAndSwitchToIdeFrame();
             await ide.waitIde(TimeoutConstants.TS_SELENIUM_START_WORKSPACE_TIMEOUT);
             await ide.waitNotificationAndClickOnButton('Do you trust the authors of', 'Yes, I trust', 60_000);
 
@@ -73,9 +73,9 @@ suite(`The 'PythonPlugin' test`, async () => {
         test('Error highlighting', async () => {
             const textForErrorDisplaying: string = 'err';
             await editor.type(tabTitle, textForErrorDisplaying, 7);
-            await editor.waitErrorInLine(7, TimeoutConstants.TS_ERROR_HIGHLIGHTING_TIMEOUT);
+            await editor.waitErrorInLine(7, tabTitle, TimeoutConstants.TS_ERROR_HIGHLIGHTING_TIMEOUT);
             await editor.performKeyCombination(tabTitle, Key.chord(Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE));
-            await editor.waitErrorInLineDisappearance(7);
+            await editor.waitErrorInLineDisappearance(7, tabTitle);
         });
     });
 

@@ -57,10 +57,10 @@ suite(`The 'TypescriptPlugin and Node-debug' tests`, async () => {
         });
 
         test('Wait until created workspace is started', async () => {
+            await ide.waitAndSwitchToIdeFrame();
             workspaceName = await workspaceNameHandler.getNameFromUrl();
             CheReporter.registerRunningWorkspace(workspaceName);
 
-            await ide.waitAndSwitchToIdeFrame();
             await ide.waitIde(TimeoutConstants.TS_SELENIUM_START_WORKSPACE_TIMEOUT);
             await ide.waitNotificationAndClickOnButton('Do you trust the authors of', 'Yes, I trust', 60_000);
 
@@ -90,9 +90,9 @@ suite(`The 'TypescriptPlugin and Node-debug' tests`, async () => {
         test('Error highlighting', async () => {
             const textForErrorDisplaying: string = '//';
             await editor.type(tabTitle, textForErrorDisplaying, 5);
-            await editor.waitErrorInLine(4, TimeoutConstants.TS_ERROR_HIGHLIGHTING_TIMEOUT);
+            await editor.waitErrorInLine(4, tabTitle, TimeoutConstants.TS_ERROR_HIGHLIGHTING_TIMEOUT);
             await editor.type(tabTitle, Key.chord(Key.DELETE, Key.DELETE), 5);
-            await editor.waitErrorInLineDisappearance(4);
+            await editor.waitErrorInLineDisappearance(4, tabTitle);
         });
 
         test('Codenavigation', async () => {

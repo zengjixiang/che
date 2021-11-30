@@ -43,10 +43,10 @@ suite('The "VscodeXmlPlugin" userstory', async () => {
         });
 
         test('Wait until created workspace is started', async () => {
+            await ide.waitAndSwitchToIdeFrame();
             workspaceName = await workspaceNameHandler.getNameFromUrl();
             CheReporter.registerRunningWorkspace(workspaceName);
 
-            await ide.waitAndSwitchToIdeFrame();
             await ide.waitIde(TimeoutConstants.TS_SELENIUM_START_WORKSPACE_TIMEOUT);
             await ide.waitNotificationAndClickOnButton('Do you trust the authors of', 'Yes, I trust', 60_000);
         });
@@ -69,12 +69,12 @@ suite('The "VscodeXmlPlugin" userstory', async () => {
             await projectTree.expandPathAndOpenFile(pathToFile, xmlFileName);
 
             await editor.type(xmlFileName, '\$\%\^\#', 16);
-            await editor.waitErrorInLine(16);
+            await editor.waitErrorInLine(16, xmlFileName);
         });
 
         test('Check error disappearance', async () => {
             await editor.performKeyCombination(xmlFileName, Key.chord(Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE));
-            await editor.waitErrorInLineDisappearance(16);
+            await editor.waitErrorInLineDisappearance(16, xmlFileName);
         });
 
         test('Check auto-close tags', async () => {
