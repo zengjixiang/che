@@ -170,11 +170,12 @@ docker push quay.io/eclipse/che-e2e:latest
 # update template in the release tag
 update_issue_template "${VERSION}" "${ISSUE_TEMPLATE_FILE}"
 
+COMMIT_MSG="chore: Release ${VERSION}"
+git commit -asm "${COMMIT_MSG}"
+
 # tag the release
 git tag "${VERSION}"
 git push origin "${VERSION}"
-COMMIT_MSG="chore: Release ${VERSION}"
-git commit -asm "${COMMIT_MSG}"
 
 # now update ${BASEBRANCH} to the new snapshot version
 git checkout "${BASEBRANCH}"
