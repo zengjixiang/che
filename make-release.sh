@@ -77,7 +77,7 @@ bump_version () {
   cd tests/e2e
   npm --no-git-tag-version version --allow-same-version "${NEXT_VERSION}"
   sed_in_place -r -e "/@eclipse-che\/api|@eclipse-che\/workspace-client|@eclipse-che\/workspace-telemetry-client/!s/(\"@eclipse-che\/..*\": )(\".*\")/\1\"$VERSION\"/" package.json
-  cd ..
+  cd ../..
   git add VERSION package.json
   COMMIT_MSG="chore: Bump to ${NEXT_VERSION} in ${BUMP_BRANCH}"
   git commit -asm "${COMMIT_MSG}"
