@@ -19,12 +19,25 @@ on:
         description: If true, tags will be recreated. Use with caution
         required: false
         default: 'false'
+      makeRelease:
+        description: If true, release script will be performed (new version tag and images will be created)
+        required: false
+        default: 'true'
+      publishToNpmJs:
+        description: If true, Project will be published to npmjs. The version tag must exist.
+        required: false
+        default: 'true'
 
 jobs:
   build:
     name: Create Che E2E Tests Release
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@eclipse-che'
       -
         name: "Checkout source code"
         uses: actions/checkout@v2
@@ -32,7 +45,7 @@ jobs:
           fetch-depth: 0
       - 
         name: Check existing tags
-        if: github.event.inputs.forceRecreateTags == 'true'
+        if: github.event.inputs.makeRelease == 'true'
         run: |
           set +e
           RECREATE_TAGS=${{ github.event.inputs.forceRecreateTags }}
@@ -42,6 +55,7 @@ jobs:
             if [[ ${RECREATE_TAGS} == "true" ]]; then
               echo "[INFO] Removing tag for ${VERSION} version. New tag will be recreated during release."
               git push origin :$VERSION
+              git tag -d || true
             else
               echo "[ERROR] Cannot proceed with release - tag ${EXISTING_TAG} already exists."
               exit 1
@@ -76,6 +90,9 @@ jobs:
           sudo chmod +x /usr/bin/yq
       - 
         name: Perform a release
+        if: github.event.inputs.makeRelease == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.CHE_NPM_AUTH_TOKEN}}
         run: |
           git config --global user.name "Mykhailo Kuznietsov"
           git config --global user.email "mkuznets@redhat.com"
@@ -83,14 +100,22 @@ jobs:
 
           export GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
           ./make-release.sh --version ${{ github.event.inputs.version}}
-
+      - name: Publish to npmjs
+        if: github.event.inputs.publishToNpmJs == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.CHE_NPM_AUTH_TOKEN}}
+        run: |
+          git checkout ${{ github.event.inputs.version}}
+          pushd tests/e2e >/dev/null || exit
+            npm ci && npm run tsc && npm publish
+          popd  >/dev/null || exit
       - name: Create failure MM message
         if: ${{ failure() }}
         run: |
           echo "{\"text\":\":no_entry_sign: Che E2E Tests ${{ github.event.inputs.version }} release has failed: https://github.com/eclipse/che/actions/workflows/release.yml\"}" > mattermost.json
       - name: Create success MM message
         run: |
-          echo "{\"text\":\":white_check_mark: Che E2E Tests ${{ github.event.inputs.version }} has been released: https://quay.io/eclipse/che-e2e:${{ github.event.inputs.version }}\"}" > mattermost.json
+          echo "{\"text\":\":white_check_mark: Che E2E Tests image and generator ${{ github.event.inputs.version }} release job is complete: \n Performed tagging and container build of new image: https://quay.io/eclipse/che-e2e:${{ github.event.inputs.version }}. \n Published package to npmjs https://www.npmjs.com/package/@eclipse-che/che-e2e/v/${{ github.event.inputs.version }}.\"}" > mattermost.json
       - name: Send MM message
         if: ${{ success() }} || ${{ failure() }}
         uses: mattermost/action-mattermost-notify@1.1.0
