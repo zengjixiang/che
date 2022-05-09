@@ -17,7 +17,7 @@ import { TestConstants } from '../../TestConstants';
 const driverHelper: DriverHelper = e2eContainer.get(CLASSES.DriverHelper);
 suite(`API request test `, async () => {
     test('Obtain token from Cookie', async () => {
-       //The _oauth_proxy tokene is saved in the Cookies. Obtain token here:
+       //The _oauth_proxy token is saved in the Cookies. Obtain token here:
        let  token = await driverHelper.getDriver().manage().getCookie('_oauth_proxy')
        console.log('<<<<<<_oauth_proxy value <<<<<<<' + token.value)
 
